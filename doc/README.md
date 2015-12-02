@@ -3,13 +3,13 @@
 This is tutorial about building a Docker-based cluster with overlay network and
 DNS-based service discovery and auto registration new containers.
 
-After all steps, we get a cluster from 3 nodes. The first node it's infra, his
-responsibilities are providing key value storage for Swarm also it's Docker
-private registry. The second node it's Swarm Master - primary cloud entry
-point, it's host primary Consul DNS service and Registrator. The last node it's
+After all steps, we get a 3 nodes cluster. The first node is infra, it's
+responsibilities is providing key value storage for Swarm also it is Docker
+private registry. The second node is Swarm Master - primary cloud entry
+point, it is host primary Consul DNS service and Registrator. The last node is
 backup node for Consul DNS service. All nodes, except infra, has Registrator on
-board and linked together by overlay network with name 'private', so containers
-run in swarm cluster can communicate each other via "private" network using
+board and linked together by overlay network which is named as 'private', so containers,
+in swarm cluster, can communicate each other via "private" network using
 simple naming, for example, you can connect to MySQL
 `mysql --host=my_mysql_container_name --user=myname --password=mypass mydb.`
 

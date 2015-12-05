@@ -47,20 +47,21 @@ Overlay network has name private and connect all nodes
 ## Infra node
 create infra node
 ```
-docker-machine create -d virtualbox node.infra.dc0.00
+docker-machine create -d virtualbox \
+--engine-opt="cluster-store=consul://INFRA:8500" \
+--engine-opt="cluster-advertise=eth1:2376" \
+--engine-insecure-registry="INFRA:5000" \
+node.infra.dc0.00
 ```
+update infra node docker config
+```
+docker-machine ssh node.infra.dc0.00 \
+"sudo sed -i s/INFRA/$(docker-machine ip node.infra.dc0.00)/ \
+/var/lib/boot2docker/profile && \
+sudo /etc/init.d/docker restart"
+```
+
 ### Registry
-```
-docker-machine ssh node.infra.dc0.00
-sudo vi /var/lib/boot2docker/profile
-```
-append `EXTRA_ARGS` with `--insecure-registry=<ip of node.infra.dc0.00>:5000`
-
-node ip you can get from command `docker-machine ip node.infra.dc0.00`
-```
-sudo /etc/init.d/docker restart
-```
-
 create docker registry on node.infra.dc0.00
 ```
 docker $(docker-machine config node.infra.dc0.00) run \
@@ -83,9 +84,18 @@ docker $(docker-machine config node.infra.dc0.00) rmi progrium/consul
 install consul as key\value storage on infra for swarm
 ```
 docker $(docker-machine config node.infra.dc0.00) run -d \
---name "docker_consul_kv_00" \
+--restart=always --name "docker_consul_kv_00" \
 -p 8500:8500 \
 $(docker-machine ip node.infra.dc0.00):5000/consul -server -bootstrap-expect 1
+```
+
+### Swarm
+```
+docker $(docker-machine config node.infra.dc0.00) run -d \
+--restart=always --name "swarm-agent" \
+-p 2375:2375 \
+swarm join --advertise $(docker-machine ip node.infra.dc0.00):2376 \
+consul://$(docker-machine ip node.infra.dc0.00):8500
 ```
 
 ## Swarm Master

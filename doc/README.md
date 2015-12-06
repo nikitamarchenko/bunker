@@ -20,10 +20,11 @@ simple naming, for example, you can connect to MySQL
 
 
 ## Infra Components
+- swarm agent in docker
 - consul in docker as kv storage
 - docker image repo
 - docker image builder
-- TODO: swarm agent in docker
+
 
 ## Worker Components
 
@@ -192,10 +193,25 @@ push $(docker-machine ip node.infra.dc0.00):5000/registrator && \
 docker $(docker-machine config node.infra.dc0.00) rmi registrator
 ```
 
-install on node.swarm.dc0.00
+install on node.infra.dc0.00
 ```
 docker run -d \
 --name=docker_registrator_00 \
+--env="constraint:node==node.infra.dc0.00" \
+--net=private \
+--volume=/var/run/docker.sock:/tmp/docker.sock \
+--dns=$(docker inspect --format '{{ .NetworkSettings.Networks.private.IPAddress }}' docker_consul_dns_00) \
+--dns=$(docker inspect --format '{{ .NetworkSettings.Networks.private.IPAddress }}' docker_consul_dns_01) \
+$(docker-machine ip node.infra.dc0.00):5000/registrator \
+-internal \
+-overlay-net private \
+consul://consul.service.consul:8500
+```
+
+install on node.swarm.dc0.00
+```
+docker run -d \
+--name=docker_registrator_01 \
 --env="constraint:node==node.swarm.dc0.00" \
 --net=private \
 --volume=/var/run/docker.sock:/tmp/docker.sock \
@@ -209,7 +225,7 @@ consul://consul.service.consul:8500
 install on node.swarm.dc0.01
 ```
 docker run -d \
---name=docker_registrator_01 \
+--name=docker_registrator_02 \
 --env="constraint:node==node.swarm.dc0.01" \
 --net=private \
 --volume=/var/run/docker.sock:/tmp/docker.sock \

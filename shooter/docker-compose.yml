@@ -1,0 +1,13 @@
+shooter:
+  image: "${BUNKER_REGISTRY}/shooter"
+  dns:
+    - "${BUNKER_DNS_0}"
+    - "${BUNKER_DNS_1}"
+    - "8.8.8.8"
+  dns_search:
+    - "service.consul"
+  environment:
+    - "constraint:node==node.swarm*"
+  expose:
+    - "10000"
+  net: "private"

@@ -4,6 +4,10 @@ SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 
 function bunker_create_infra()
 {
+  export VIRTUALBOX_MEMORY_SIZE=2000
+  export VIRTUALBOX_CPU_COUNT=2
+  export VIRTUALBOX_DISK_SIZE=10000
+
   docker-machine create -d virtualbox \
   --engine-opt="cluster-store=consul://INFRA:8500" \
   --engine-opt="cluster-advertise=eth1:2376" \
@@ -70,6 +74,10 @@ function bunker_shell()
 
 function bunker_create_swarm_master()
 {
+  export VIRTUALBOX_MEMORY_SIZE=1000
+  export VIRTUALBOX_CPU_COUNT=1
+  export VIRTUALBOX_DISK_SIZE=10000
+
   docker-machine create \
   -d virtualbox \
   --swarm --swarm-image="swarm" --swarm-master \
@@ -87,6 +95,10 @@ function bunker_create_swarm_master()
 
 function bunker_create_swarm_slave()
 {
+  export VIRTUALBOX_MEMORY_SIZE=1000
+  export VIRTUALBOX_CPU_COUNT=1
+  export VIRTUALBOX_DISK_SIZE=10000
+
   docker-machine create \
   -d virtualbox \
   --swarm --swarm-image="swarm" --swarm \
@@ -352,6 +364,35 @@ function bunker_setup_cadvisor()
   --dns-search=service.consul \
   google/cadvisor:latest
 
+}
+
+function bunker_setup_shooter()
+{
+  eval $(docker-machine env --swarm node.swarm.dc0.00)
+  cd "$SCRIPT_DIR"/shooter
+
+  docker $(docker-machine config node.infra.dc0.00) build \
+  -t shooter:bunker .
+
+  cd -
+
+  docker rmi $(docker-machine ip node.infra.dc0.00):5000/shooter
+  docker $(docker-machine config node.infra.dc0.00) tag -f shooter:bunker \
+  $(docker-machine ip node.infra.dc0.00):5000/shooter && \
+  docker $(docker-machine config node.infra.dc0.00) push \
+  $(docker-machine ip node.infra.dc0.00):5000/shooter
+}
+
+export BUNKER_REGISTRY=$(docker-machine ip node.infra.dc0.00):5000
+export BUNKER_DNS_0=$(docker inspect --format '{{ .NetworkSettings.Networks.private.IPAddress }}' docker_consul_dns_00)
+export BUNKER_DNS_1=$(docker inspect --format '{{ .NetworkSettings.Networks.private.IPAddress }}' docker_consul_dns_01)
+
+function bunker_run_shooter()
+{
+  cd "$SCRIPT_DIR"/shooter
+  docker-compose up -d
+  docker-compose scale shooter=3
+  cd -
 }
 
 

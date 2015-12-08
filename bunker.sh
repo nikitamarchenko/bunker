@@ -21,7 +21,6 @@ function bunker_create_infra()
 
   docker $(docker-machine config node.infra.dc0.00) run \
   -d --restart=always --name docker_registry_00 \
-  -v `pwd`/data:/var/lib/registry \
   -p $(docker-machine ip node.infra.dc0.00):5000:5000 \
   registry:2
 
@@ -74,7 +73,7 @@ function bunker_shell()
 
 function bunker_create_swarm_master()
 {
-  export VIRTUALBOX_MEMORY_SIZE=1000
+  export VIRTUALBOX_MEMORY_SIZE=2000
   export VIRTUALBOX_CPU_COUNT=1
   export VIRTUALBOX_DISK_SIZE=10000
 
@@ -95,7 +94,7 @@ function bunker_create_swarm_master()
 
 function bunker_create_swarm_slave()
 {
-  export VIRTUALBOX_MEMORY_SIZE=1000
+  export VIRTUALBOX_MEMORY_SIZE=2000
   export VIRTUALBOX_CPU_COUNT=1
   export VIRTUALBOX_DISK_SIZE=10000
 
@@ -379,6 +378,9 @@ function bunker_setup_shooter()
   $(docker-machine ip node.infra.dc0.00):5000/shooter && \
   docker $(docker-machine config node.infra.dc0.00) push \
   $(docker-machine ip node.infra.dc0.00):5000/shooter
+
+  docker rmi $(docker-machine ip node.infra.dc0.00):5000/shooter
+  docker pull $(docker-machine ip node.infra.dc0.00):5000/shooter
 }
 
 

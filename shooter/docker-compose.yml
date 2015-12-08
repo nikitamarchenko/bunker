@@ -1,5 +1,5 @@
 shooter:
-  image: "${BUNKER_REGISTRY}/shooter"
+  image: "${BUNKER_REGISTRY}/shooter:latest"
   dns:
     - "${BUNKER_DNS_0}"
     - "${BUNKER_DNS_1}"

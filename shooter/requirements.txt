@@ -1,2 +1,3 @@
 zerorpc
 gevent
+python-logstash

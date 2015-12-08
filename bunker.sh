@@ -372,12 +372,10 @@ function bunker_setup_shooter()
   cd "$SCRIPT_DIR"/shooter
 
   docker $(docker-machine config node.infra.dc0.00) build \
-  -t shooter:bunker .
+  -t shooter .
 
   cd -
-
-  docker rmi $(docker-machine ip node.infra.dc0.00):5000/shooter
-  docker $(docker-machine config node.infra.dc0.00) tag -f shooter:bunker \
+  docker $(docker-machine config node.infra.dc0.00) tag -f shooter:latest \
   $(docker-machine ip node.infra.dc0.00):5000/shooter && \
   docker $(docker-machine config node.infra.dc0.00) push \
   $(docker-machine ip node.infra.dc0.00):5000/shooter

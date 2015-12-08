@@ -381,12 +381,13 @@ function bunker_setup_shooter()
   $(docker-machine ip node.infra.dc0.00):5000/shooter
 }
 
-export BUNKER_REGISTRY=$(docker-machine ip node.infra.dc0.00):5000
-export BUNKER_DNS_0=$(docker inspect --format '{{ .NetworkSettings.Networks.private.IPAddress }}' docker_consul_dns_00)
-export BUNKER_DNS_1=$(docker inspect --format '{{ .NetworkSettings.Networks.private.IPAddress }}' docker_consul_dns_01)
 
 function bunker_run_shooter()
 {
+  export BUNKER_REGISTRY=$(docker-machine ip node.infra.dc0.00):5000
+  export BUNKER_DNS_0=$(docker inspect --format '{{ .NetworkSettings.Networks.private.IPAddress }}' docker_consul_dns_00)
+  export BUNKER_DNS_1=$(docker inspect --format '{{ .NetworkSettings.Networks.private.IPAddress }}' docker_consul_dns_01)
+
   cd "$SCRIPT_DIR"/shooter
   docker-compose up -d
   docker-compose scale shooter=3

@@ -8,21 +8,43 @@ function bunker_create_infra()
   export VIRTUALBOX_CPU_COUNT=2
   export VIRTUALBOX_DISK_SIZE=10000
 
+  unset DOCKER_TLS_VERIFY
+  unset DOCKER_HOST
+  unset DOCKER_CERT_PATH
+  unset DOCKER_MACHINE_NAME
+
   docker-machine create -d virtualbox \
   --engine-opt="cluster-store=consul://INFRA:8500" \
   --engine-opt="cluster-advertise=eth1:2376" \
   --engine-insecure-registry="INFRA:5000" \
   node.infra.dc0.00
 
+  if [ $? -ne 0 ]; then
+      echo "docker-machine create FAILED"
+      return
+  fi
+
   docker-machine ssh node.infra.dc0.00 \
   "sudo sed -i s/INFRA/$(docker-machine ip node.infra.dc0.00)/ \
   /var/lib/boot2docker/profile && \
   sudo /etc/init.d/docker restart"
 
+  sleep 5
+
+  if [ $? -ne 0 ]; then
+      echo "node.infra.dc0.00 setup FAILED"
+      return
+  fi
+
+
   docker $(docker-machine config node.infra.dc0.00) run \
   -d --restart=always --name docker_registry_00 \
   -p $(docker-machine ip node.infra.dc0.00):5000:5000 \
   registry:2
+
+  if [ $? -ne 0 ]; then
+      echo "docker_registry_00 setup FAILED"
+  fi
 
   docker $(docker-machine config node.infra.dc0.00) pull progrium/consul && \
   docker $(docker-machine config node.infra.dc0.00) tag progrium/consul \
@@ -365,6 +387,22 @@ function bunker_setup_cadvisor()
 
 }
 
+function bunker_setup_grafana()
+{
+  eval $(docker-machine env --swarm node.swarm.dc0.00)
+
+  docker run -d \
+  --name="docker_grafana_00" \
+  --env="constraint:node==node.infra.dc0.00" \
+  --net private \
+  --dns=$(docker inspect --format '{{ .NetworkSettings.Networks.private.IPAddress }}' docker_consul_dns_00) \
+  --dns=$(docker inspect --format '{{ .NetworkSettings.Networks.private.IPAddress }}' docker_consul_dns_01) \
+  --dns=8.8.8.8 \
+  --dns-search=service.consul \
+  -p $(docker-machine ip node.infra.dc0.00):3000:3000 \
+  grafana/grafana
+}
+
 function bunker_setup_shooter()
 {
   eval $(docker-machine env --swarm node.swarm.dc0.00)
@@ -396,6 +434,16 @@ function bunker_run_shooter()
   cd -
 }
 
+function bunker_stats()
+{
+  eval $(docker-machine env --swarm node.swarm.dc0.00)
+  docker stats $(docker ps -q)
+}
+
+function bunker_destroy()
+{
+  docker-machine rm $(docker-machine ls -q)
+}
 
 function bunker_deploy()
 {

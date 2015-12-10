@@ -1,3 +1,4 @@
 zerorpc
 gevent
 python-logstash
+prometheus_client

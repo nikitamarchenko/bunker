@@ -24,3 +24,16 @@ scrape_configs:
       - cadvisor.service.consul
       type: A
       port: 8080
+
+  - job_name: 'shooter'
+    scrape_interval: 5s
+
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+    scrape_timeout: 10s
+
+    dns_sd_configs:
+    - names:
+      - shooter.service.consul
+      type: A
+      port: 8000

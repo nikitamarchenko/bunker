@@ -4,6 +4,7 @@ import os
 import random
 import logging
 import logstash
+from prometheus_client import start_http_server, Summary, Counter
 
 import zerorpc
 import gevent
@@ -24,9 +25,12 @@ LOG_EXTRA = {
 
 VERSION = '0.0.0.4'
 
+HIT_COUNTER = Counter('hit', 'Count of shooter hits from another shooter')
+
 class Shooter(object):
 
     def hit(self, name):
+        HIT_COUNTER.inc()
         LOG.info('{}: hit from {}'.format(SHOOTER_ID, name), extra=LOG_EXTRA)
         return SHOOTER_ID
 
@@ -60,4 +64,7 @@ def aim():
 
 
 if __name__ == '__main__':
+
+    start_http_server(8000)
+
     gevent.joinall(map(gevent.spawn, [server, aim]))
